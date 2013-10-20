@@ -1,25 +1,32 @@
 
 void run() {
 	value a = Node("A");
-	value b = a.addChild(Node("B"));
-	a.addChild(Node("C"));
-	value d = a.addChild(Node("D"));
-	b.addChild(Node("E"));
-	b.addChild(Node("F"));
-	b.addChild(Node("G"));
-	b.addChild(Node("H"));
-	value i = d.addChild(Node("I"));
-	d.addChild(Node("J"));
-	value k = d.addChild(Node("K"));
-	d.addChild(Node("L"));
-	d.addChild(Node("M"));
-	d.addChild(Node("N"));
-	value o = d.addChild(Node("O"));
-	i.addChild(Node("R"));
-	i.addChild(Node("S"));
-	o.addChild(Node("P"));
-	o.addChild(Node("X"));
-	k.addChild(Node("Q"));
+	value b = a.addChild("B");
+	a.addChild("C");
+	value d = a.addChild("D");
+	b.addChild("E");
+	b.addChild("F");
+	b.addChild("G");
+	b.addChild("H");
+	value i = d.addChild("I");
+	value j = d.addChild("J");
+	value k = d.addChild("K");
+	d.addChild("L");
+	d.addChild("M");
+	d.addChild("N");
+	value o = d.addChild("O");
+	i.addChild("R");
+	i.addChild("S");
+	o.addChild("P");
+	o.addChild("X");
+	value q = k.addChild("Q");
 	
 	print(a.string);
+	a.updateHashes();
+	print(a.string);
+	q.setProperty("PropQ1", "Value Q1");
+	j.addChild("JJ");
+	a.updateHashes();
+	print(a.string);
+	
 }
