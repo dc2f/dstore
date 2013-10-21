@@ -1,8 +1,13 @@
-import com.dstore {
-	Commit,
-	Node
+import ceylon.collection {
+	HashMap
 }
-import ceylon.collection { HashMap }
+
+import com.dstore {
+	Commit, WorkingTree
+}
+import com.dstore.node {
+	NodeImpl
+}
 
 "Thrown when a hash is needed but none is available"
 shared class NoHashException(String message) extends Exception(message) {}
@@ -19,11 +24,11 @@ shared interface Storage {
 	"Reads a node with the given id.
 	 
 	 This must always return a new node instance, since nodes are mutable."
-	shared formal Node readNode(String id);
+	shared formal NodeImpl readNode(String id, WorkingTree workingTree);
 	
 	"Writes a node with the given id."
 	throws(`class NoHashException`, "When the node has no nodeHash.")
-	shared formal void writeNode(Node node);
+	shared formal void writeNode(NodeImpl node);
 	
 	"Get a branch by its name"
 	shared formal Commit? readBranch(String name);
@@ -36,7 +41,7 @@ shared interface Storage {
 shared class HashMapStorage() satisfies Storage {
 
 	value commits = HashMap<String, Commit>();
-	value nodes = HashMap<String, Node>();
+	value nodes = HashMap<String, NodeImpl>();
 	
 	// branches stored as name to commit id mapping
 	value branches = HashMap<String, String>();
@@ -51,19 +56,20 @@ shared class HashMapStorage() satisfies Storage {
 		commits.put(commit.commitHash, commit);
 	}
 	
-	shared actual Node readNode(String id) {
-		// Fixme after node refactoring
+	/*
+	 FIXME: reference to working tree is pure bullshit here.
+	 Store should return and get some more generic format
+	*/
+	shared actual NodeImpl readNode(String id, WorkingTree workingTree) {
+		// FIXME after node refactoring
 		value node = nodes.get(id);
 		assert(exists node);
-		return node;
+		
+		return NodeImpl(node.name, node.parentId, workingTree, node.nodeHash, node.childrenHash, node.propertiesHash);
 	}
 	
-	shared actual void writeNode(Node node) {
-		if(exists id = node.nodeHash) {
-			nodes.put(id, node);
-		} else {
-			throw NoHashException("given node has no hash");
-		}
+	shared actual void writeNode(NodeImpl node) {
+		nodes.put(node.nodeHash, node);
 	}
 
 	shared actual Commit? readBranch(String name) {

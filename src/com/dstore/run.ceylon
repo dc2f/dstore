@@ -1,7 +1,9 @@
+import com.dstore.node { NodeImpl }
 
 
 void run() {
-	value a = Node("A");
+	/*
+	value a = NodeImpl("A");
 	value b = a.addChild("B");
 	a.addChild("C");
 	value d = a.addChild("D");
@@ -29,5 +31,5 @@ void run() {
 	j.addChild("JJ");
 	a.updateHashes();
 	print(a.string);
-	
+	*/
 }

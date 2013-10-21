@@ -1,4 +1,6 @@
-import com.dstore.hash { Sha1 }
+import com.dstore.hash {
+	Sha1
+}
 
 "A commit"
 shared class Commit(

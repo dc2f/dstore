@@ -1,12 +1,26 @@
 
-import java.security { MessageDigest { createDigest = getInstance } }
-import java.nio { ByteBuffer { allocateByteBuffer = allocate }, ByteOrder { littleEndian = \iLITTLE_ENDIAN } }
-
-import java.lang {
-	JString=String, StringBuilder
+import com.dstore {
+	Property,
+	PropertyPrimitive
 }
 
-import com.dstore { PropertyPrimitive, Property }
+import java.lang {
+	JString=String,
+	StringBuilder
+}
+import java.nio {
+	ByteBuffer {
+		allocateByteBuffer=allocate
+	},
+	ByteOrder {
+		littleEndian=LITTLE_ENDIAN
+	}
+}
+import java.security {
+	MessageDigest {
+		createDigest=getInstance
+	}
+}
 
 String hexDigits = "0123456789abcdef";
 Integer twoByteMask = #F;
