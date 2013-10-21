@@ -1,13 +1,12 @@
-import com.dstore {
-	Property,
-	PropertyPrimitive
-}
+
 import java.security { MessageDigest { createDigest = getInstance } }
 import java.nio { ByteBuffer { allocateByteBuffer = allocate }, ByteOrder { littleEndian = \iLITTLE_ENDIAN } }
 
 import java.lang {
 	JString=String, StringBuilder
 }
+
+import com.dstore { PropertyPrimitive, Property }
 
 String hexDigits = "0123456789abcdef";
 Integer twoByteMask = #F;
@@ -23,8 +22,10 @@ shared class Sha1() {
 		buf.reset();
 	}
 	
-	"Adds a property to the hash"
-	shared void add(Property property) {
+	"Adds a property to the hash.
+	 
+	 Returns `this` for chaining"
+	shared Sha1 add(Property property) {
 		if(is String property) {
 			digest.update(JString(property).getBytes("UTF-8"));
 		} else if (is Integer property) {
@@ -38,11 +39,16 @@ shared class Sha1() {
 				add(item);
 			}
 		}
+		
+		return this;
 	}
 	
-	"Resets the hasher to start a new hash"
-	shared void reset() {
+	"Resets the hasher to start a new hash.
+	 
+	 Returns `this` for chaining"
+	shared Sha1 reset() {
 		digest.reset();
+		return this;
 	}
 
 	"Get the current hasher state as 64 character hex string"

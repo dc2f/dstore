@@ -1,4 +1,5 @@
 
+
 void run() {
 	value a = Node("A");
 	value b = a.addChild("B");
