@@ -3,7 +3,7 @@ import com.dstore {
 	Node
 }
 "Prints nodes in an readable format"
-class NodePrinter(NodeImpl node) {
+class NodePrinter(WorkingTreeNode node) {
 	
 	"Prints the node recursively as string
 	 to the given builder with the given start indentation."
@@ -11,6 +11,7 @@ class NodePrinter(NodeImpl node) {
 		b.append(" ".repeat(indent));
 		b.append(node.children.empty then "-" else "+");
 		b.append(" ``node.name``");
+		b.append(" (``node.storeId``)");
 		/*
 		b.append(" (n: ``node.nodeHash?.spanTo(5) else "no node hash"`` ");
 		b.append("c: ``node.childrenHash?.spanTo(5) else "no children hash"`` ");
@@ -18,6 +19,7 @@ class NodePrinter(NodeImpl node) {
 		b.append(")\n");
 		*/
 		
+		/*
 		for(name -> prop in node.properties) {
 			b.append(" ".repeat(indent + 2));
 			b.append("* ``node.name``: ");
@@ -29,6 +31,8 @@ class NodePrinter(NodeImpl node) {
 			}
 			b.append("\n");
 		}
+		*/
+				
 		for(child in node.children.values) {
 			printTree(child, b, indent +2);
 		}

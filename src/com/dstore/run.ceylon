@@ -1,7 +1,16 @@
-import com.dstore.node { NodeImpl }
+import com.dstore.storage {
+	HashMapStorage
+}
 
 
 void run() {
+	value dstore = DStore(HashMapStorage());
+	value workingTree = dstore.checkout("master");
+	
+	if(exists workingTree) {
+		
+	}
+	
 	/*
 	value a = NodeImpl("A");
 	value b = a.addChild("B");

@@ -1,3 +1,4 @@
+/*
 import ceylon.collection {
 	HashMap,
 	MutableMap
@@ -12,7 +13,7 @@ shared class PropertyMap(Map<String, Property> loadedProperties)
 		satisfies MutableMap<String, Property> {
 	
 	value properties = HashMap<String, Property>(loadedProperties);
-	shared late NodeImpl node;
+	shared late WorkingTreeNode node;
 	
 	shared actual void clear() {
 		if(!properties.empty) {
@@ -58,3 +59,4 @@ shared class PropertyMap(Map<String, Property> loadedProperties)
 	
 	shared actual Integer hash => properties.hash;
 }
+*/

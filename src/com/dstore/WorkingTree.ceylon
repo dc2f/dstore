@@ -3,10 +3,10 @@ import ceylon.collection {
 }
 
 import com.dstore.node {
-	NodeImpl
+	WorkingTreeNode
 }
 import com.dstore.storage {
-	Storage
+	Storage, StoredNode
 }
 
 "A working area where it is possible to get and modify the nodes."
@@ -23,20 +23,28 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	String branchName;
 	
 	"The nodes loaded in this workspace by their id"
-	value loadedNodes = HashMap<String, NodeImpl>();
+	value workspaceNodes = HashMap<String, [WorkingTreeNode, StoredNode?]>();
 	
 	"The root node of the working tree"
-	shared NodeImpl rootNode {
-		return getNodeById(baseCommit.rootNode);
+	shared WorkingTreeNode rootNode {
+		return getNodeByStoreId(baseCommit.rootNode);
 	}
 	
-	"Get a node by it's id."
-	shared NodeImpl getNodeById(String nodeId) {
-		if(exists node = loadedNodes.get(nodeId)) {
-			return node;
+	"Get a node by it's storeId."
+	shared WorkingTreeNode getNodeByStoreId(String storeId) {
+		
+		if(exists pair = workspaceNodes.get(storeId)) {
+			return pair[0];
 		} else {
-			value node = storage.readNode(nodeId, this);
-			loadedNodes.put(nodeId, node);
+			value storedNode = storage.readNode(storeId);
+			value node = WorkingTreeNode {
+				workingTree = this;
+				storeId = storedNode.storedId;
+				name = storedNode.name;
+				storedChildren = storedNode.children;
+			};
+			
+			workspaceNodes.put(storeId, [node, storedNode]);
 			return node;
 		}
 	}
@@ -58,8 +66,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	
 	"creates a node with the given name"
 	shared Node createNode(String name) {
-		// TODO: fixme
-		return NodeImpl(name, null, this, "hash", "hash", "hash");
+		value storeId = storage.uniqueId();
+		return WorkingTreeNode(this, storeId, name);
 	}
 	
 	/*

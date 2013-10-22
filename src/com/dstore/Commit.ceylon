@@ -1,11 +1,8 @@
-import com.dstore.hash {
-	Sha1
-}
-
 "A commit"
 shared class Commit(
 			rootNode,
 			parents,
+			commitId,
 			message = ""
 		) {
 	
@@ -13,9 +10,5 @@ shared class Commit(
 	shared String rootNode; 
 	shared String message;
 	
-	shared String commitHash = Sha1()
-			.add(parents*.commitHash)
-			.add(rootNode)
-			.add(message)
-			.string;
+	shared String commitId;
 }

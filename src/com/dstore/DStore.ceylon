@@ -15,6 +15,6 @@ class DStore(storage) {
 		if(exists commit = storage.readBranch(branchName)) {
 			return WorkingTree(storage, commit, branchName);
 		}
-		return null; 
+		return null;
 	}
 }

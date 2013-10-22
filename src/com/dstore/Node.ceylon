@@ -15,16 +15,16 @@ shared interface Node {
 	"The name of a node"
 	shared formal String name;
 	
-	"The parent node of the node"
-	shared formal Node? parent;
+	//"The parent node of the node"
+	//shared formal Node? parent;
 	
 	"The children of the node"
 	shared formal MutableMap<String, Node> children;
 	
-	"The properties of the node"
-	shared formal MutableMap<String, Property> properties;
+	//"The properties of the node"
+	//shared formal MutableMap<String, Property> properties;
 	
-	shared formal variable String nodeHash;
-	shared formal variable String childrenHash;
-	shared formal variable String propertiesHash;
+	"The globally unique id of the node.
+	 Every commited change in a node will lead to a new storage id."
+	shared formal variable String storeId;
 }
