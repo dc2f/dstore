@@ -6,7 +6,7 @@ import ceylon.collection {
  
  The target values are cached, so the given transforming function must be stable."
 class LazyTransformingMap<Key, TargetValue, InputValue>(transform, {<Key->InputValue|TargetValue>*} initialItems = emptyMap) 
-		satisfies Map<Key, TargetValue> 
+		satisfies Map<Key, TargetValue> & MutableMap<Key, InputValue|TargetValue> 
 		given Key satisfies Object
 		given TargetValue satisfies Object 
 		given InputValue satisfies Object {
@@ -57,22 +57,22 @@ class LazyTransformingMap<Key, TargetValue, InputValue>(transform, {<Key->InputV
 	}
 	
 	"Adds an element into this map"
-	shared void put(Key key, InputValue|TargetValue item) {
-		mixed.put(key, item);
+	shared actual InputValue|TargetValue? put(Key key, InputValue|TargetValue item) {
+		return mixed.put(key, item);
 	}
 	
 	"Adds all elemnts into this map"
-	shared void putAll(Key key, {<Key->InputValue|TargetValue>*} items) {
+	shared actual void putAll({<Key->InputValue|TargetValue>*} items) {
 		mixed.putAll(items);
 	}
 	
 	"Removes an item of this map"
-	shared void remove(Key key) {
-		mixed.remove(key);
+	shared actual InputValue|TargetValue? remove(Key key) {
+		return mixed.remove(key);
 	}
 	
 	"Clears all items in the map"
-	shared void clear() {
+	shared actual void clear() {
 		mixed.clear();
 	}
 }
