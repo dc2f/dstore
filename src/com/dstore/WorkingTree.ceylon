@@ -2,8 +2,9 @@ import com.dstore.node {
 	WorkingTreeNode
 }
 import com.dstore.storage {
-	Storage
+	Storage, StoredNode
 }
+import ceylon.collection { HashSet, HashMap, LinkedList }
 
 "A working area where it is possible to get and modify the nodes."
 shared class WorkingTree(storage, baseCommit, branchName) {
@@ -18,26 +19,47 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	 This is just stored for pushing without specifiying the branch name again."
 	String branchName;
 	
+	"Nodes that are propably changed.
+	 A node is changed when its children have changed or its properties.
+	 
+	 It can be that the the node practically isn't dirty because someone 
+	 changed a property and than changed it back to the old value."
+	shared HashSet<WorkingTreeNode> changedNodes = HashSet<WorkingTreeNode>();
+	
+	"All nodes loaded by this working tree indexed by store id"
+	value loadedNodes = HashMap<String, [WorkingTreeNode, StoredNode]>();
+	
 	"Loads a node from the store and returns it as a WorkingTreeNode of this WorkingTree"
-	shared WorkingTreeNode loadNode(String storeId, WorkingTreeNode? parent) {
+	WorkingTreeNode loadNode(String storeId, WorkingTreeNode? parent) {
 		value storedNode = storage.readNode(storeId);
-		value node = WorkingTreeNode { 
-			storeId = storedNode.storedId; 
-			name = storedNode.name; 
-			parent = parent; 
+		value node = WorkingTreeNode {
+			storeId = storedNode.storedId;
+			name = storedNode.name;
+			parent = parent;
 			storedChildren = storedNode.children;
 		};
+		// TODO: check if it is somehow possible to set a `late` property in the constructor
+		// If not beg on the mailing list to allow this 
 		node.workingTree = this;
+		loadedNodes.put(storeId, [node, storedNode]);
 		
 		return node;
 	}
 	
-	
 	"The root node of the working tree"
 	shared WorkingTreeNode rootNode = loadNode(baseCommit.rootNode, null);
 	
+	"Get a node by its store id"
+	shared Node getNodeByStoreId(String storeId, WorkingTreeNode? parent) {
+		if(exists pair = loadedNodes[storeId]) {
+			return pair[0];
+		} else {
+			return loadNode(storeId, parent);
+		}
+	}
+	
 	"Get a node from a slash separated path"
-	shared Node? getNode(String path) {
+	shared Node? getPath(String path) {
 		variable Node node = rootNode;
 		for (name in path.split((Character char) => char == "/", true)) {
 			value child = node.children[name];
@@ -58,78 +80,82 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		return node;
 	}
 	
-	/*
-	"Recusivley commits the given node"
-	void commitNode(NodeImpl node) {
-		if(!updatedProperties && !removedChildren && updatedChildren.empty) {
-			return;
-		}
+	"Commits the current working tree with the given message"
+	shared Commit commit(String message = "") {
+		// TODO: check all updated nodes against the stored node if it has really changed (and what)
+		// This would avoid re-writes when changeing a property and afterwards changing it back
 		
-		value sha1 = Sha1();
+		// mark all parents of changed nodes also as changed
+		value toUpdate = HashSet<WorkingTreeNode>(); 
 		
-		if(!updatedChildren.empty) {
-			// rehash all dirty children
-			for(childName in updatedChildren) {
-				assert(exists child = childMap[childName]);
-				child.updateHashes();
-			}
-		}
-		
-		if(removedChildren || !updatedChildren.empty) {
-			// update our own children hash
-			if(!childMap.empty) {
-				for(name -> node in childMap) {
-					String? childHash = node.nodeHash;
-					assert(exists childHash);
-					sha1.add(childHash);
+		for(changedNode in changedNodes) {
+			value changed = LinkedList<WorkingTreeNode>();
+			
+			variable Boolean first = true;
+			variable WorkingTreeNode node = changedNode;
+			while(true) {
+				// node has changed and node definitely is attached to root
+				if(toUpdate.contains(node)) {
+					break;
 				}
-				childrenHash = sha1.string;
-				sha1.reset();
-			} else {
-				childrenHash = null;
-			}
-			
-			// no more dirty or removed children
-			removedChildren = false;
-			updatedChildren.clear();
-			
-			print("updated children hash of ``name``");			
-		}
-		
-		if(updatedProperties) {
-			if(!propertiesMap.empty) {
-				for(name -> property in propertiesMap) {
-					sha1.add(name);
-					sha1.add(property);
+				
+				if(first) {
+					first = false;
+				} else {
+					node.childrenChanged = true;
 				}
-				propertiesHash = sha1.string;
-				sha1.reset();
-			} else {
-				propertiesHash = null;
+				
+				changed.add(node);
+				
+				if(exists parent = node.parent) {
+					node = parent;
+				} else {
+					break;
+				}
 			}
 			
-			// no more updated properties
-			updatedProperties = false;
+			// if the last parent isn't the root node, 
+			// the node is detached from the tree and we don't need to write it
+			if(node == rootNode) {
+				toUpdate.addAll(changed);
+			}
+		}
+		
+		// write all nodes to update
+		for(WorkingTreeNode node in toUpdate) {
+			node.storeId = storage.uniqueId();
 			
-			print("updated properties hash of ``name``");
+			String|Map<String, String> children;
+			if(node.childrenChanged) {
+				children = node.children.mixed.mapItems((String key, Node|String item) {
+					switch(item)
+					case(is String) {
+						return item;
+					}
+					case(is Node) {
+						return item.storeId;
+					}
+				});
+			} else {
+				value pair = loadedNodes.get(node.storeId);
+				assert(exists pair);
+				children = pair[1].childrenId;
+			}
+			
+			// node is now clean
+			node.childrenChanged = false;
+			changedNodes.remove(node);
+			
+			storage.writeNode { 
+				storedId = node.storeId; 
+				name = node.name; 
+				parentId = node.parent?.storeId;
+				children = children;
+			};
 		}
 		
-		sha1.add(name);
-		
-		if(exists ch = childrenHash) {
-			sha1.add(ch);
-		}
-		if(exists ph = propertiesHash) {
-			sha1.add(ph);
-		}
-		nodeHash = sha1.string;
-		
-		print("updated node hash of ``name``");
+		value commit = Commit(storage.uniqueId(), rootNode.storeId, {baseCommit}, message);
+		storage.storeCommit(commit);
+		return commit;
 	}
-	
-	"Commits the current working tree"
-	shared Commit commit() {
-		return Commit("test", {});
-	}
-	 */
 }

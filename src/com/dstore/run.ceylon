@@ -29,7 +29,6 @@ void run() {
 	
 	analyze("new wt2 must see only original root node", wt2);
 	
-	/*
 	print("commit wt1");
 	wt1.commit();
 	
@@ -40,5 +39,4 @@ void run() {
 	assert(exists wt3);
 	
 	analyze("even a new wt3 of master must not see any changes", wt3);
-	*/
 }

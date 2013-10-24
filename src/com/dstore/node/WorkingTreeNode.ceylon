@@ -10,6 +10,9 @@ import com.dstore.collection {
 "The working tree aware node implementation"
 shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap) satisfies Node {
 	
+	"If the children of this node have changed"
+	shared variable Boolean childrenChanged = false;
+
 	"The working tree this node belongs to"
 	shared late WorkingTree workingTree;
 	
@@ -32,7 +35,7 @@ shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap) s
 		shared late WorkingTreeNode node;
 		
 		shared Node transform (String key) {
-			return node.workingTree.loadNode(key, node);
+			return node.workingTree.getNodeByStoreId(key, node);
 		}
 	}
 	transformer.node = this;
@@ -50,6 +53,9 @@ shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap) s
 		
 		Node child = workingTree.createNode(this, name);
 		children.put(name, child);
+		
+		childrenChanged = true;
+		workingTree.changedNodes.add(this);
 		
 		return child;
 	}

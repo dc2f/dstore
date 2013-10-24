@@ -13,7 +13,7 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key-
 	
 	TargetValue (InputValue) transform;
 	
-	HashMap<Key, TargetValue|InputValue> mixed = HashMap<Key, TargetValue|InputValue>();
+	shared HashMap<Key, TargetValue|InputValue> mixed = HashMap<Key, TargetValue|InputValue>();
 	
 	shared actual Boolean equals(Object that) => mixed.equals(that);
 	
