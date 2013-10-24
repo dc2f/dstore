@@ -141,4 +141,24 @@ shared class HashMapStorage() satisfies Storage {
 		
 		return node;
 	}
+	
+	shared actual String string {
+		value b = StringBuilder();
+		for(value id -> node in storedNodes) {
+			b.append("Node ``node.name`` (``node.storedId``)\n");
+			b.append(" + Children (``node.childrenId``)\n");
+			value children = storedChildren[node.childrenId];
+			assert(exists children);
+			for(name -> child in children) {
+				b.append("   - ``name`` (``child``)\n");
+			}
+			b.append(" + Properties (``node.propertiesId``)\n");
+			value properties = storedProperties[node.propertiesId];
+			assert(exists properties);
+			for(name -> property in properties) {
+				b.append("   - ``name`` (``property``)\n");
+			}
+		}
+		return b.string;
+	}
 }
