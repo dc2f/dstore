@@ -2,43 +2,43 @@ import com.dstore.storage {
 	HashMapStorage
 }
 
+void analyze(String msg, WorkingTree wt) {
+	print(msg);
+	print(wt.rootNode);
+}
 
 void run() {
 	value dstore = DStore(HashMapStorage());
-	value workingTree = dstore.checkout("master");
+	value wt1 = dstore.checkout("master");
+	assert(exists wt1);
 	
-	if(exists workingTree) {
-		
-	}
+	value root = wt1.rootNode;
+	value a = root.addChild("A");
+	value b = root.addChild("B");
+	
+	a.addChild("A1");
+	a.addChild("A2");
+	
+	b.addChild("B1");
+	b.addChild("B2");
+	
+	analyze("created some nodes in wt1", wt1);
+	
+	value wt2 = dstore.checkout("master");
+	assert(exists wt2);
+	
+	analyze("new wt2 must see only original root node", wt2);
 	
 	/*
-	value a = NodeImpl("A");
-	value b = a.addChild("B");
-	a.addChild("C");
-	value d = a.addChild("D");
-	b.addChild("E");
-	b.addChild("F");
-	b.addChild("G");
-	b.addChild("H");
-	value i = d.addChild("I");
-	value j = d.addChild("J");
-	value k = d.addChild("K");
-	d.addChild("L");
-	d.addChild("M");
-	d.addChild("N");
-	value o = d.addChild("O");
-	i.addChild("R");
-	i.addChild("S");
-	o.addChild("P");
-	o.addChild("X");
-	value q = k.addChild("Q");
+	print("commit wt1");
+	wt1.commit();
 	
-	print(a.string);
-	a.updateHashes();
-	print(a.string);
-	q.setProperty("PropQ1", "Value Q1");
-	j.addChild("JJ");
-	a.updateHashes();
-	print(a.string);
+	analyze("root node id of wt1 must have changed", wt1);
+	analyze("wt2 must not see any changes", wt2);
+	
+	value wt3 = dstore.checkout("master");
+	assert(exists wt3);
+	
+	analyze("even a new wt3 of master must not see any changes", wt3);
 	*/
 }

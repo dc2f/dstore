@@ -1,4 +1,4 @@
-import ceylon.collection { MutableMap }
+
 "Exception when trying to add a node that already exists"
 shared class NodeExistsException(String description) 
 		extends Exception(description) {}
@@ -16,10 +16,13 @@ shared interface Node {
 	shared formal String name;
 	
 	//"The parent node of the node"
-	//shared formal Node? parent;
+	shared formal Node? parent;
 	
 	"The children of the node"
-	shared formal MutableMap<String, Node> children;
+	shared formal Map<String, Node> children;
+	
+	"Adds a child with the given name to the node"
+	shared formal Node addChild(String name);
 	
 	//"The properties of the node"
 	//shared formal MutableMap<String, Property> properties;

@@ -1,14 +1,20 @@
 "A commit"
 shared class Commit(
+			storeId,
 			rootNode,
 			parents,
-			commitId,
 			message = ""
 		) {
 	
-	shared {Commit*} parents;
-	shared String rootNode; 
-	shared String message;
+	"Store id of this commit"
+	shared String storeId;
 	
-	shared String commitId;
+	"Parent commits"
+	shared {Commit*} parents;
+	
+	"Store id of the root node in this commit"
+	shared String rootNode;
+	
+	"Commit message" 
+	shared String message;
 }

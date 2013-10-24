@@ -1,5 +1,4 @@
 import com.dstore {
-	PropertyPrimitive,
 	Node
 }
 "Prints nodes in an readable format"
@@ -11,13 +10,7 @@ class NodePrinter(WorkingTreeNode node) {
 		b.append(" ".repeat(indent));
 		b.append(node.children.empty then "-" else "+");
 		b.append(" ``node.name``");
-		b.append(" (``node.storeId``)");
-		/*
-		b.append(" (n: ``node.nodeHash?.spanTo(5) else "no node hash"`` ");
-		b.append("c: ``node.childrenHash?.spanTo(5) else "no children hash"`` ");
-		b.append("p: ``node.propertiesHash?.spanTo(5) else "no properties hash"``");
-		b.append(")\n");
-		*/
+		b.append(" (``node.storeId``)\n");
 		
 		/*
 		for(name -> prop in node.properties) {

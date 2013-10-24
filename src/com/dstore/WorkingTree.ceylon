@@ -1,12 +1,8 @@
-import ceylon.collection {
-	HashMap
-}
-
 import com.dstore.node {
 	WorkingTreeNode
 }
 import com.dstore.storage {
-	Storage, StoredNode
+	Storage
 }
 
 "A working area where it is possible to get and modify the nodes."
@@ -22,32 +18,23 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	 This is just stored for pushing without specifiying the branch name again."
 	String branchName;
 	
-	"The nodes loaded in this workspace by their id"
-	value workspaceNodes = HashMap<String, [WorkingTreeNode, StoredNode?]>();
+	"Loads a node from the store and returns it as a WorkingTreeNode of this WorkingTree"
+	shared WorkingTreeNode loadNode(String storeId, WorkingTreeNode? parent) {
+		value storedNode = storage.readNode(storeId);
+		value node = WorkingTreeNode { 
+			storeId = storedNode.storedId; 
+			name = storedNode.name; 
+			parent = parent; 
+			storedChildren = storedNode.children;
+		};
+		node.workingTree = this;
+		
+		return node;
+	}
+	
 	
 	"The root node of the working tree"
-	shared WorkingTreeNode rootNode {
-		return getNodeByStoreId(baseCommit.rootNode);
-	}
-	
-	"Get a node by it's storeId."
-	shared WorkingTreeNode getNodeByStoreId(String storeId) {
-		
-		if(exists pair = workspaceNodes.get(storeId)) {
-			return pair[0];
-		} else {
-			value storedNode = storage.readNode(storeId);
-			value node = WorkingTreeNode {
-				workingTree = this;
-				storeId = storedNode.storedId;
-				name = storedNode.name;
-				storedChildren = storedNode.children;
-			};
-			
-			workspaceNodes.put(storeId, [node, storedNode]);
-			return node;
-		}
-	}
+	shared WorkingTreeNode rootNode = loadNode(baseCommit.rootNode, null);
 	
 	"Get a node from a slash separated path"
 	shared Node? getNode(String path) {
@@ -64,10 +51,11 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		return node;
 	}
 	
-	"creates a node with the given name"
-	shared Node createNode(String name) {
-		value storeId = storage.uniqueId();
-		return WorkingTreeNode(this, storeId, name);
+	"Creates a new node for the given parent node and name"
+	shared Node createNode(WorkingTreeNode parent, String name) {
+		value node = WorkingTreeNode(storage.uniqueId(), name, parent);
+		node.workingTree = this;
+		return node;
 	}
 	
 	/*

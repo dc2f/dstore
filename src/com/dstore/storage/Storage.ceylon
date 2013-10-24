@@ -23,7 +23,7 @@ shared interface Storage {
 	shared formal String uniqueId();
 	
 	"Reads a commit with the given id."
-	shared formal Commit readCommit(String id);
+	shared formal Commit? readCommit(String id);
 	
 	"stores the given commit with its id"
 	shared formal void storeCommit(Commit commit);
@@ -32,16 +32,16 @@ shared interface Storage {
 	shared formal Commit? readBranch(String name);
 	
 	"Create a branch for the given commit"
-	shared formal void writeBranch(String name, Commit commit);
+	shared formal void storeBranch(String name, Commit commit);
 	
-	"Reads a node with the given id."
+	"Reads a node with the given storage id."
 	shared formal StoredNode readNode(String id);
 	
 	"Writes / updates a node."
 	shared formal FlatStoredNode writeNode(
 			String storedId, String name, String? parentId, 
-			String|Map<String, String> children, 
-			String|Map<String, Property> properties);
+			String|Map<String, String> children = emptyMap, 
+			String|Map<String, Property> properties = emptyMap);
 }
 
 
@@ -67,14 +67,12 @@ shared class HashMapStorage() satisfies Storage {
 		return randomUUID().string;
 	}
 
-	shared actual Commit readCommit(String id) {
-		value commit = storedCommits.get(id);
-		assert(exists commit);
-		return commit;
+	shared actual Commit? readCommit(String id) {
+		return storedCommits.get(id);
 	}
 	
 	shared actual void storeCommit(Commit commit) {
-		storedCommits.put(commit.commitId, commit);
+		storedCommits.put(commit.storeId, commit);
 	}
 	
 	shared actual Commit? readBranch(String name) {
@@ -84,8 +82,8 @@ shared class HashMapStorage() satisfies Storage {
 		return null;
 	}
 	
-	shared actual void writeBranch(String name, Commit commit) {
-		storedBranches.put(name, commit.commitId);
+	shared actual void storeBranch(String name, Commit commit) {
+		storedBranches.put(name, commit.storeId);
 	}
 	
 	shared actual StoredNode readNode(String storeId) {
