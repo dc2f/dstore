@@ -138,23 +138,30 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	
 	"Commits the current working tree with the given message"
 	shared Commit commit(String message = "") {
-		// write all nodes to update
-		for(WorkingTreeNode node in findNodesToUpdate()) {
+		value nodesToUpdate = findNodesToUpdate();
+		
+		// give the ones to update a new id before storing, otherwise child ids won't match
+		for(WorkingTreeNode node in nodesToUpdate) {
 			if(!node.new) {
 				node.storeId = storage.uniqueId();
 			}
-			
+		}
+		
+		// write all nodes to update
+		for(WorkingTreeNode node in nodesToUpdate) {
 			String|Map<String, String> children;
 			if(node.childrenChanged) {
-				children = node.children.mixed.mapItems((String key, Node|String item) {
-					switch(item)
-					case(is String) {
-						return item;
-					}
-					case(is Node) {
-						return item.storeId;
-					}
-				});
+				children = HashMap<String, String>(
+					node.children.mixed.mapItems((String key, Node|String item) {
+						switch(item)
+						case(is String) {
+							return item;
+						}
+						case(is Node) {
+							return item.storeId;
+						}
+					})
+				);
 			} else {
 				if(exists stored = node.storedNode) {
 					children = stored.childrenId;
@@ -177,6 +184,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		
 		value commit = Commit(storage.uniqueId(), rootNode.storeId, {baseCommit}, message);
 		storage.storeCommit(commit);
+		
+		this.baseCommit = commit;
 		return commit;
 	}
 }
