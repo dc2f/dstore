@@ -6,7 +6,9 @@ import com.dstore {
 import com.dstore.collection {
 	LazyTransformingMap
 }
-import com.dstore.storage { StoredNode }
+import com.dstore.storage {
+	FlatStoredNode
+}
 
 "The working tree aware node implementation"
 shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap, storedNode = null) satisfies Node {
@@ -15,7 +17,16 @@ shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap, s
 	shared variable Boolean childrenChanged = false;
 
 	"The stored node from which this node was loaded"
-	shared variable StoredNode? storedNode;
+	shared variable FlatStoredNode? storedNode;
+
+	"If the node is new or has been stored already"
+	shared Boolean new {
+		if(exists stored = storedNode) { 
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	"The working tree this node belongs to"
 	shared late WorkingTree workingTree;

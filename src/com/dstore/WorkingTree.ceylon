@@ -1,10 +1,15 @@
+import ceylon.collection {
+	HashSet,
+	HashMap,
+	LinkedList
+}
+
 import com.dstore.node {
 	WorkingTreeNode
 }
 import com.dstore.storage {
-	Storage, StoredNode
+	Storage
 }
-import ceylon.collection { HashSet, HashMap, LinkedList }
 
 "A working area where it is possible to get and modify the nodes."
 shared class WorkingTree(storage, baseCommit, branchName) {
@@ -17,7 +22,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	
 	"The name of the branch where this working tree was based on.
 	 This is just stored for pushing without specifiying the branch name again."
-	String branchName;
+	String? branchName;
 	
 	"Nodes that are propably changed.
 	 A node is changed when its children have changed or its properties.
@@ -36,6 +41,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 			storeId = storedNode.storedId;
 			name = storedNode.name;
 			parent = parent;
+			storedNode = storedNode;
 			storedChildren = storedNode.children;
 		};
 		// TODO: check if it is somehow possible to set a `late` property in the constructor
@@ -98,9 +104,11 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 			
 			variable Boolean first = true;
 			variable WorkingTreeNode node = changedNode;
-			while(true) {
+			
+			while(true) {				
 				// node has changed and node definitely is attached to root
 				if(toUpdate.contains(node)) {
+					toUpdate.addAll(changed);
 					break;
 				}
 				
@@ -112,19 +120,16 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 				
 				changed.add(node);
 				
-				// something strange happens here - parent seems to exist and still the else block is executed?! 
-				value parent = node.parent;
-				if(exists parent) {
-					node = parent;
+				if(exists p = node.parent) {
+					node = p;
 				} else {
+					// if the last node isn't the root node, 
+					// the node is detached from the tree and we don't need to write it
+					if(node == rootNode) {
+						toUpdate.addAll(changed);
+					}
 					break;
 				}
-			}
-			
-			// if the last parent isn't the root node, 
-			// the node is detached from the tree and we don't need to write it
-			if(node == rootNode) {
-				toUpdate.addAll(changed);
 			}
 		}
 		
@@ -133,12 +138,11 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	
 	"Commits the current working tree with the given message"
 	shared Commit commit(String message = "") {
-		print(changedNodes.map((WorkingTreeNode elem) => elem.name));
-		print(findNodesToUpdate().map((WorkingTreeNode elem) => elem.name));
-		
 		// write all nodes to update
 		for(WorkingTreeNode node in findNodesToUpdate()) {
-			node.storeId = storage.uniqueId();
+			if(!node.new) {
+				node.storeId = storage.uniqueId();
+			}
 			
 			String|Map<String, String> children;
 			if(node.childrenChanged) {
@@ -163,8 +167,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 			node.childrenChanged = false;
 			changedNodes.remove(node);
 			
-			print("writing node ``node.name``");
-			storage.writeNode { 
+			node.storedNode = storage.writeNode { 
 				storedId = node.storeId; 
 				name = node.name; 
 				parentId = node.parent?.storeId;
