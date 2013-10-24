@@ -5,7 +5,7 @@ import ceylon.collection {
 "A mutable map that lazily transforms from the input values to target value upon read.
  
  The target values are cached, so the given transforming function must be stable."
-class LazyTransformingMap<Key, TargetValue, InputValue>(transform, {<Key->InputValue|TargetValue>*} initialItems = emptyMap) 
+shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key->InputValue|TargetValue>*} initialItems = emptyMap) 
 		satisfies Map<Key, TargetValue> & MutableMap<Key, InputValue|TargetValue> 
 		given Key satisfies Object
 		given TargetValue satisfies Object 
@@ -20,7 +20,7 @@ class LazyTransformingMap<Key, TargetValue, InputValue>(transform, {<Key->InputV
 	shared actual Integer hash => mixed.hash;
 	
 	shared actual Map<Key,TargetValue> clone {
-		value cloned = LazyTransformingMap<Key, TargetValue, InputValue>(transform, initialItems);
+		value cloned = LazyTransformingMap<Key, InputValue, TargetValue>(transform, initialItems);
 		cloned.mixed.putAll(mixed.clone);
 		return cloned;
 	}
