@@ -27,7 +27,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	shared HashSet<WorkingTreeNode> changedNodes = HashSet<WorkingTreeNode>();
 	
 	"All nodes loaded by this working tree indexed by store id"
-	value loadedNodes = HashMap<String, [WorkingTreeNode, StoredNode]>();
+	value loadedNodes = HashMap<String, WorkingTreeNode>();
 	
 	"Loads a node from the store and returns it as a WorkingTreeNode of this WorkingTree"
 	WorkingTreeNode loadNode(String storeId, WorkingTreeNode? parent) {
@@ -41,7 +41,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		// TODO: check if it is somehow possible to set a `late` property in the constructor
 		// If not beg on the mailing list to allow this 
 		node.workingTree = this;
-		loadedNodes.put(storeId, [node, storedNode]);
+		loadedNodes.put(storeId, node);
 		
 		return node;
 	}
@@ -51,8 +51,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	
 	"Get a node by its store id"
 	shared Node getNodeByStoreId(String storeId, WorkingTreeNode? parent) {
-		if(exists pair = loadedNodes[storeId]) {
-			return pair[0];
+		if(exists node = loadedNodes[storeId]) {
+			return node;
 		} else {
 			return loadNode(storeId, parent);
 		}
@@ -77,15 +77,20 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 	shared Node createNode(WorkingTreeNode parent, String name) {
 		value node = WorkingTreeNode(storage.uniqueId(), name, parent);
 		node.workingTree = this;
+		
+		loadedNodes.put(node.storeId, node);
+		changedNodes.add(node);
 		return node;
 	}
 	
-	"Commits the current working tree with the given message"
-	shared Commit commit(String message = "") {
-		// TODO: check all updated nodes against the stored node if it has really changed (and what)
-		// This would avoid re-writes when changeing a property and afterwards changing it back
+	"Find all nodes that must be updated in the store"
+	Set<WorkingTreeNode> findNodesToUpdate() {
+		/*
+		 TODO: check all updated nodes against the stored node if it has really changed (and what)
+		 This would avoid re-writes when changeing a property and afterwards changing it back
+		 Alternatively this could be tracked in the node itself. Don't know what would be more efficient.
+		 */ 
 		
-		// mark all parents of changed nodes also as changed
 		value toUpdate = HashSet<WorkingTreeNode>(); 
 		
 		for(changedNode in changedNodes) {
@@ -107,7 +112,9 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 				
 				changed.add(node);
 				
-				if(exists parent = node.parent) {
+				// something strange happens here - parent seems to exist and still the else block is executed?! 
+				value parent = node.parent;
+				if(exists parent) {
 					node = parent;
 				} else {
 					break;
@@ -121,8 +128,16 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 			}
 		}
 		
+		return toUpdate;
+	}
+	
+	"Commits the current working tree with the given message"
+	shared Commit commit(String message = "") {
+		print(changedNodes.map((WorkingTreeNode elem) => elem.name));
+		print(findNodesToUpdate().map((WorkingTreeNode elem) => elem.name));
+		
 		// write all nodes to update
-		for(WorkingTreeNode node in toUpdate) {
+		for(WorkingTreeNode node in findNodesToUpdate()) {
 			node.storeId = storage.uniqueId();
 			
 			String|Map<String, String> children;
@@ -137,15 +152,18 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 					}
 				});
 			} else {
-				value pair = loadedNodes.get(node.storeId);
-				assert(exists pair);
-				children = pair[1].childrenId;
+				if(exists stored = node.storedNode) {
+					children = stored.childrenId;
+				} else {
+					children = emptyMap;
+				}
 			}
 			
 			// node is now clean
 			node.childrenChanged = false;
 			changedNodes.remove(node);
 			
+			print("writing node ``node.name``");
 			storage.writeNode { 
 				storedId = node.storeId; 
 				name = node.name; 
