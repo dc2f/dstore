@@ -7,8 +7,36 @@ void analyze(String msg, WorkingTree wt) {
 	print(wt.rootNode);
 }
 
+void simple() {
+	value storage = HashMapStorage();
+	value dstore = DStore(storage);
+	value wt1 = dstore.checkoutBranch("master");
+	assert(exists wt1);
+	
+	value root = wt1.rootNode;
+	value a = root.addChild("A");
+	value b = root.addChild("B");
+	
+	value a1 = a.addChild("A1");
+	a.addChild("A2");
+	
+	value c1 = wt1.commit();
+	analyze("Commited first changes", wt1);
+	
+	a1.addChild("A11");
+	wt1.commit();
+	
+	analyze("Commited A11", wt1);
+	
+	value wt2 = dstore.checkoutCommit(c1.storeId);
+	assert(exists wt2);
+	
+	analyze("checkout out c1", wt2);
+}
+
 void run() {
-	value dstore = DStore(HashMapStorage());
+	value storage = HashMapStorage();
+	value dstore = DStore(storage);
 	value wt1 = dstore.checkoutBranch("master");
 	assert(exists wt1);
 	
@@ -53,9 +81,10 @@ void run() {
 	value wtC1 = dstore.checkoutCommit(c1.storeId);
 	value wtC2 = dstore.checkoutCommit(c2.storeId);
 	value wtC3 = dstore.checkoutCommit(c3.storeId);
-	assert(exists wtC1);
-	assert(exists wtC2);
-	assert(exists wtC3);
+	assert(exists wtC1, exists wtC2, exists wtC3);
+	
+	print(wtC1.rootNode.storedNode?.childrenId else "no children id");
+	value storedNode = wtC1.rootNode.storedNode;
 	
 	analyze("new wtC1 of commit1 must be the same as before in (1)", wtC1);
 	analyze("new wtC2 of commit2 must be the same as before in (2)", wtC2);
