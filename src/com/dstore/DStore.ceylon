@@ -28,12 +28,18 @@ class DStore(storage) {
 	
 	initializeRootCommit();
 	
-	"Checks out a branch as the working tree.
-	 
-	 Returns null if the branch doesn't exist."
-	shared WorkingTree? checkout(String branchName) {
+	"Checks out a branch as a new working tree."
+	shared WorkingTree? checkoutBranch(String branchName) {
 		if(exists commit = storage.readBranch(branchName)) {
 			return WorkingTree(storage, commit, branchName);
+		}
+		return null;
+	}
+	
+	"Check out a commit as a new working tree."
+	shared WorkingTree? checkoutCommit(String commitId) {
+		if(exists commit = storage.readCommit(commitId)) {
+			return WorkingTree(storage, commit, null);
 		}
 		return null;
 	}
