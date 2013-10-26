@@ -42,6 +42,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 			name = storedNode.name;
 			parent = parent;
 			storedNode = storedNode;
+			storedProperties = storedNode.properties;
 			storedChildren = storedNode.children;
 		};
 		// TODO: check if it is somehow possible to set a `late` property in the constructor
@@ -170,8 +171,22 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 				}
 			}
 			
+			String|Map<String, Property> properties;
+			if (node.propertiesChanged) {
+				// if properties changed, we need to save it..
+				properties = HashMap<String, Property>(node.properties);
+			} else {
+				// otherwise just use the old id.
+				if (exists stored = node.storedNode) {
+					properties = stored.propertiesId;
+				} else {
+					properties = emptyMap;
+				}
+			}
+			
 			// node is now clean
 			node.childrenChanged = false;
+			node.propertiesChanged = false;
 			changedNodes.remove(node);
 			
 			node.storedNode = storage.writeNode { 
@@ -179,6 +194,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 				name = node.name; 
 				parentId = node.parent?.storeId;
 				children = children;
+				properties = properties;
 			};
 		}
 		

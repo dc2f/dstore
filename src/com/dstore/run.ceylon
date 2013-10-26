@@ -43,6 +43,7 @@ void run() {
 	value root = wt1.rootNode;
 	value a = root.addChild("A");
 	value b = root.addChild("B");
+	a.properties.put("pAx", "Hello World");
 	
 	a.addChild("A1");
 	a.addChild("A2");

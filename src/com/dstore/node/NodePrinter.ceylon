@@ -1,6 +1,8 @@
 import com.dstore {
-	Node
+	Node,
+	PropertyPrimitive
 }
+
 "Prints nodes in an readable format"
 class NodePrinter(WorkingTreeNode node) {
 	
@@ -12,10 +14,9 @@ class NodePrinter(WorkingTreeNode node) {
 		b.append(" ``node.name``");
 		b.append(" (``node.storeId``)\n");
 		
-		/*
 		for(name -> prop in node.properties) {
 			b.append(" ".repeat(indent + 2));
-			b.append("* ``node.name``: ");
+			b.append("* ``name``: ");
 			if(is PropertyPrimitive prop) {
 				b.append(prop.string);
 			} else if (is {PropertyPrimitive*} prop) {
@@ -24,7 +25,6 @@ class NodePrinter(WorkingTreeNode node) {
 			}
 			b.append("\n");
 		}
-		*/
 				
 		for(child in node.children.values) {
 			printTree(child, b, indent +2);

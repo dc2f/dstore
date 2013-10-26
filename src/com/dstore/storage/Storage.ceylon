@@ -122,18 +122,18 @@ shared class HashMapStorage() satisfies Storage {
 		
 		String childrenId;
 		
-		if(is String children) {
+		switch (children)
+		case (is String) {
 			childrenId = children;
-		} else {
-			assert(is Map<String, String> children);
+		} case (is Map<String, String>) {
 			childrenId = storeChildren(children);
 		}
 		
 		String propertiesId;
-		if(is String properties) {
+		switch (properties)
+		case (is String) {
 			propertiesId = properties;
-		} else {
-			assert(is Map<String, String> properties);
+		} case (is Map<String, Property>) {
 			propertiesId = storeProperties(properties);
 		}
 		

@@ -20,6 +20,10 @@ shared class WorkingTreeNode(
 	storedProperties = emptyMap,
 	storedNode = null) satisfies Node {
 	
+	// FIXME: late self reference ;-) nicest workaround there is..
+	shared late WorkingTreeNode self;
+	self = this;
+
 	"If the children of this node have changed"
 	shared variable Boolean childrenChanged = false;
 	
@@ -55,20 +59,19 @@ shared class WorkingTreeNode(
 	
 	shared Map<String, Property> storedProperties;
 	
-	// Only here as workaround to be able to leak `this`.
-	// This code could be so much nicer without this stupid transformer object.
-	// TODO: Beg on the ceylon mailing list for some more flexibility for leaking `this`
-	object transformer {
-		shared late WorkingTreeNode node;
-		
-		shared Node transform (String key) {
-			return node.workingTree.getNodeByStoreId(key, node);
+	shared actual MutableMap<String, Property> properties = NotifyingMutableMap<String, Property> {
+		wrapped = HashMap<String, Property>(storedProperties);
+		void afterChange() {
+			self.propertiesChanged = true;
+			self.workingTree.changedNodes.add(self);
 		}
-	}
-	transformer.node = this;
+		
+	};
 	
 	shared actual LazyTransformingMap<String, String, Node> children = LazyTransformingMap<String, String, Node> {
-		transform = transformer.transform;
+		Node transform(String key) {
+			return self.workingTree.getNodeByStoreId(key, self);
+		}
 		initialItems = storedChildren;
 	};
 			
@@ -92,18 +95,5 @@ shared class WorkingTreeNode(
 	//shared actual MutableMap<String, Property> properties;
 	
 	string => NodePrinter(this).string;
-	
-	shared actual late MutableMap<String, Property> properties;
-	
-	void postInit () {
-		properties = NotifyingMutableMap<String, Property> {
-			wrapped = HashMap<String, Property>(storedProperties);
-			void afterChange() {
-				propertiesChanged = true;
-				Integer blubb = workingTree.changedNodes.size;
-				workingTree.changedNodes.add(this);
-			}
-		};
-	}
 
 }
