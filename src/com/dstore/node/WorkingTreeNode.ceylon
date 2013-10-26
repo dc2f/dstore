@@ -1,20 +1,30 @@
 import com.dstore {
 	WorkingTree,
 	Node,
-	NodeExistsException
+	NodeExistsException, Property
 }
 import com.dstore.collection {
-	LazyTransformingMap
+	LazyTransformingMap, NotifyingMutableMap
 }
 import com.dstore.storage {
 	FlatStoredNode
 }
+import ceylon.collection { MutableMap, HashMap }
 
 "The working tree aware node implementation"
-shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap, storedNode = null) satisfies Node {
+shared class WorkingTreeNode(
+	storeId,
+	name,
+	parent,
+	storedChildren = emptyMap,
+	storedProperties = emptyMap,
+	storedNode = null) satisfies Node {
 	
 	"If the children of this node have changed"
 	shared variable Boolean childrenChanged = false;
+	
+	"If any properties have changed."
+	shared variable Boolean propertiesChanged = false;
 
 	"The stored node from which this node was loaded"
 	shared variable FlatStoredNode? storedNode;
@@ -42,6 +52,16 @@ shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap, s
 	
 	"A mapping name -> storeId of the stored children of this node"
 	shared Map<String, String> storedChildren;
+	
+	shared Map<String, Property> storedProperties;
+	
+	shared actual MutableMap<String, Property> properties = NotifyingMutableMap<String, Property> {
+		wrapped = HashMap<String, Property>(storedProperties);
+		void afterChange() {
+			propertiesChanged = true;
+			//workingTree.changedNodes.add(this);
+		}
+	};
 	
 	// Only here as workaround to be able to leak `this`.
 	// This code could be so much nicer without this stupid transformer object.
@@ -80,4 +100,5 @@ shared class WorkingTreeNode(storeId, name, parent, storedChildren = emptyMap, s
 	//shared actual MutableMap<String, Property> properties;
 	
 	string => NodePrinter(this).string;
+
 }

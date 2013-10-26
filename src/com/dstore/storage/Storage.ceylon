@@ -104,6 +104,7 @@ shared class HashMapStorage() satisfies Storage {
 	
 	String storeProperties(Map<String, Property> properties) {
 		value hasher = Sha1();
+		// TODO improve hashing to avoid conflicts (separator for key/value?)
 		for(key -> item in properties) {
 			hasher.add(key);
 			hasher.add(item);
