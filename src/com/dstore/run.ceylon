@@ -2,6 +2,7 @@ import com.dstore.storage {
 	HashMapStorage
 }
 
+"Prints the msg and the given wt"
 void analyze(String msg, WorkingTree wt) {
 	print(msg);
 	print(wt.rootNode);
