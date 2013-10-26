@@ -55,14 +55,6 @@ shared class WorkingTreeNode(
 	
 	shared Map<String, Property> storedProperties;
 	
-	shared actual MutableMap<String, Property> properties = NotifyingMutableMap<String, Property> {
-		wrapped = HashMap<String, Property>(storedProperties);
-		void afterChange() {
-			propertiesChanged = true;
-			//workingTree.changedNodes.add(this);
-		}
-	};
-	
 	// Only here as workaround to be able to leak `this`.
 	// This code could be so much nicer without this stupid transformer object.
 	// TODO: Beg on the ceylon mailing list for some more flexibility for leaking `this`
@@ -100,5 +92,18 @@ shared class WorkingTreeNode(
 	//shared actual MutableMap<String, Property> properties;
 	
 	string => NodePrinter(this).string;
+	
+	shared actual late MutableMap<String, Property> properties;
+	
+	void postInit () {
+		properties = NotifyingMutableMap<String, Property> {
+			wrapped = HashMap<String, Property>(storedProperties);
+			void afterChange() {
+				propertiesChanged = true;
+				Integer blubb = workingTree.changedNodes.size;
+				workingTree.changedNodes.add(this);
+			}
+		};
+	}
 
 }
