@@ -70,8 +70,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		variable Node node = rootNode;
 		for (name in path.split((Character char) => char == "/", true)) {
 			value child = node.children[name];
-			if(exists child) {
-				node = child;
+			if(exists child, exists first = child.first) {
+				node = first;
 			} else {
 				break;
 			}
@@ -150,17 +150,26 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		
 		// write all nodes to update
 		for(WorkingTreeNode node in nodesToUpdate) {
-			String|Map<String, String> children;
+			String|Map<String, {String+}> children;
 			if(node.childrenChanged) {
-				children = HashMap<String, String>(
-					node.children.mixed.mapItems((String key, Node|String item) {
-						switch(item)
-						case(is String) {
+				//value blubb = node.children.mixed.mapItems((String key, {Node*}|{String+} item) {
+				//	return {"test"};
+				//});
+				children = HashMap<String, {String+}>(
+					node.children.mixed
+							.mapItems((String key, {Node+}|{String+} item) {
+						if (is {String+} item) {
 							return item;
 						}
-						case(is Node) {
-							return item.storeId;
-						}
+						assert (is {Node+} item);
+						return item.map((Node elem) => elem.storeId);
+						//switch(item)
+						//case(is {String+}) {
+						//	return item;
+						//} case(is {Node+}) {
+						//	return item.map((Node elem) => elem.storeId);
+						//}
+						//return {"abc"};
 					})
 				);
 			} else {

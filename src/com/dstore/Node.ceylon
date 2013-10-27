@@ -1,4 +1,5 @@
 import ceylon.collection { MutableMap }
+import com.dstore.collection { NonNullableMap }
 
 "Exception when trying to add a node that already exists"
 shared class NodeExistsException(String description) 
@@ -20,7 +21,7 @@ shared interface Node {
 	shared formal Node? parent;
 	
 	"The children of the node"
-	shared formal Map<String, Node> children;
+	shared formal NonNullableMap<String, {Node*}> children;
 	
 	"Adds a child with the given name to the node"
 	shared formal Node addChild(String name);

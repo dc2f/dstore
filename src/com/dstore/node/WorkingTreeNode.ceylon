@@ -9,7 +9,7 @@ import com.dstore.collection {
 import com.dstore.storage {
 	FlatStoredNode
 }
-import ceylon.collection { MutableMap, HashMap }
+import ceylon.collection { MutableMap, HashMap, LinkedList }
 
 "The working tree aware node implementation"
 shared class WorkingTreeNode(
@@ -55,7 +55,7 @@ shared class WorkingTreeNode(
 	shared actual variable WorkingTreeNode? parent;
 	
 	"A mapping name -> storeId of the stored children of this node"
-	shared Map<String, String> storedChildren;
+	shared Map<String, {String+}> storedChildren;
 	
 	shared Map<String, Property> storedProperties;
 	
@@ -68,21 +68,21 @@ shared class WorkingTreeNode(
 		
 	};
 	
-	shared actual LazyTransformingMap<String, String, Node> children = LazyTransformingMap<String, String, Node> {
-		Node transform(String key) {
-			return self.workingTree.getNodeByStoreId(key, self);
+	shared actual LazyTransformingMap<String, {String+}, {Node+}, {Node*}> children = LazyTransformingMap<String, {String+}, {Node+}, {Node*}> {
+		{Node+} transform({String+} keys) {
+			{Node+} ret = keys.map((String key) => self.workingTree.getNodeByStoreId(key, self));
+			return ret;
+			//return self.workingTree.getNodeByStoreId(key, self);
 		}
+		defaultValue = {};
 		initialItems = storedChildren;
 	};
 			
 	"Add a new child"
 	shared actual Node addChild(String name) {
-		if(children.defines(name)) {
-			throw NodeExistsException("The node ``name`` already exists as a child");
-		}
-		
 		Node child = workingTree.createNode(this, name);
-		children.put(name, child);
+		children.put(name, children.get(name).chain({child}));
+		//children.put(name, child);
 		
 		childrenChanged = true;
 		workingTree.changedNodes.add(this);

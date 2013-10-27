@@ -1,17 +1,22 @@
 import ceylon.collection {
 	HashMap, MutableMap
 }
+import ceylon.language.meta { type }
+import com.dstore { Node }
 
 "A mutable map that lazily transforms from the input values to target value upon read.
  
  The target values are cached, so the given transforming function must be stable."
-shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key->InputValue|TargetValue>*} initialItems = emptyMap) 
-		satisfies Map<Key, TargetValue> & MutableMap<Key, InputValue|TargetValue> 
+shared class LazyTransformingMap<Key, InputValue, TargetValue, DefaultValue>(transform, defaultValue, {<Key->InputValue|TargetValue>*} initialItems = emptyMap) 
+		satisfies MutableMap<Key, InputValue|DefaultValue> & NonNullableMap<Key, DefaultValue> 
 		given Key satisfies Object
-		given TargetValue satisfies Object 
-		given InputValue satisfies Object {
+		given DefaultValue satisfies Object 
+		given InputValue satisfies Object
+		given TargetValue satisfies DefaultValue {
 	
 	TargetValue (InputValue) transform;
+	
+	DefaultValue defaultValue;
 	
 	shared HashMap<Key, TargetValue|InputValue> mixed = HashMap<Key, TargetValue|InputValue>(initialItems);
 	
@@ -19,8 +24,8 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key-
 	
 	shared actual Integer hash => mixed.hash;
 	
-	shared actual Map<Key,TargetValue> clone {
-		value cloned = LazyTransformingMap<Key, InputValue, TargetValue>(transform, initialItems);
+	shared actual LazyTransformingMap<Key, InputValue, TargetValue, DefaultValue> clone {
+		value cloned = LazyTransformingMap<Key, InputValue, TargetValue, DefaultValue>(transform, defaultValue, initialItems);
 		cloned.mixed.putAll(mixed.clone);
 		return cloned;
 	}
@@ -32,8 +37,9 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key-
 			shared actual <Key->TargetValue>|Finished next() {
 				if(!is Finished name = keyIterator.next()) {
 					value item = get(name);
-					assert(exists item);
-					
+					// we only iterate over existing keys. can never be DefaultValue.
+					print("item: ``name``: ``item``: ``outer.mixed``");
+					assert (is TargetValue item);
 					return name -> item; 
 				}
 				return finished;
@@ -43,27 +49,61 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue>(transform, {<Key-
 		return iterator;
 	}
 	
-	shared actual TargetValue? get(Object key) {
+	shared actual DefaultValue get(Object key) {
 		value element = mixed.get(key);
+		if (exists element) {
+			print("key: ``key`` -- element ``element``..");
+		} else {
+			print("element ``key`` does not exist.");
+		}
 		if(is TargetValue element) {
+			print("is TargetValue");
 			return element;
 		} else if (is InputValue element) {
+			print("is InputValue");
 			assert (is Key key);
 			value transformed = transform(element);
 			mixed.put(key, transformed);
 			return transformed;
+		} else if (is {Node+} element) {
+			print("is {Node+}");
+		} else if (is {Node*} element) {
+			print("is {Node*}");
+		} else if (is {String+} element) {
+			print("is {String+}");
+		} else if (is {String*} element) {
+			print("is {String*}");
+			print("``element.first else "no first"``");
+		} else if (is Null element) {
+			print("is null?!?!?!?!");
+			return defaultValue;
+		} else if (is {Object*} element) {
+			print("is {Object*}");
+		} else if (is {Anything*} element) {
+			print("is {Anything*}");
+		} else if (is DefaultValue element) {
+			print("is REALLY DefaultValue");
+		}
+		print("is DefaultValue");
+		//print("type: ``type(element)``");
+		return defaultValue;
+	}
+	
+	shared actual Boolean empty => mixed.empty;
+	
+	"Adds an element into this map"
+	shared actual InputValue|TargetValue? put(Key key, InputValue|DefaultValue item) {
+		if (is TargetValue|InputValue item) {
+			return mixed.put(key, item);
 		}
 		return null;
 	}
 	
-	"Adds an element into this map"
-	shared actual InputValue|TargetValue? put(Key key, InputValue|TargetValue item) {
-		return mixed.put(key, item);
-	}
-	
 	"Adds all elemnts into this map"
-	shared actual void putAll({<Key->InputValue|TargetValue>*} items) {
-		mixed.putAll(items);
+	shared actual void putAll({<Key->InputValue|DefaultValue>*} items) {
+		if (is {<Key->InputValue|TargetValue>*} items) {
+			mixed.putAll(items);
+		}
 	}
 	
 	"Removes an item of this map"

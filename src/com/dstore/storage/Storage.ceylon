@@ -40,7 +40,7 @@ shared interface Storage {
 	"Writes / updates a node."
 	shared formal FlatStoredNode writeNode(
 			String storedId, String name, String? parentId, 
-			String|Map<String, String> children = emptyMap, 
+			String|Map<String, {String+}> children = emptyMap, 
 			String|Map<String, Property> properties = emptyMap);
 }
 
@@ -58,7 +58,7 @@ shared class HashMapStorage() satisfies Storage {
 	value storedNodes = HashMap<String, FlatStoredNode>();
 	
 	"childrenId -> (name -> storedId)"
-	value storedChildren = HashMap<String, Map<String, String>>();
+	value storedChildren = HashMap<String, Map<String, {String+}>>();
 	
 	"propertyId -> (name -> value)"
 	value storedProperties = HashMap<String, Map<String, Property>>(); 
@@ -96,7 +96,7 @@ shared class HashMapStorage() satisfies Storage {
 		return StoredNode(node.storedId, node.name, node.childrenId, node.propertiesId, children, properties);
 	}
 	
-	String storeChildren(Map<String, String> children) {
+	String storeChildren(Map<String, {String+}> children) {
 		value id = uniqueId();
 		storedChildren.put(id, children);
 		return id;
@@ -117,7 +117,7 @@ shared class HashMapStorage() satisfies Storage {
 	
 	shared actual FlatStoredNode writeNode(
 		String storedId, String name, String? parentId, 
-		String|Map<String, String> children, 
+		String|Map<String, {String+}> children, 
 		String|Map<String, Property> properties) {
 		
 		String childrenId;
@@ -125,7 +125,7 @@ shared class HashMapStorage() satisfies Storage {
 		switch (children)
 		case (is String) {
 			childrenId = children;
-		} case (is Map<String, String>) {
+		} case (is Map<String, {String+}>) {
 			childrenId = storeChildren(children);
 		}
 		

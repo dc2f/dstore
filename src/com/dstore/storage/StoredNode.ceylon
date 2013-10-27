@@ -29,7 +29,7 @@ shared class StoredNode(
 		extends FlatStoredNode(storedId, name, childrenId, propertiesId) {
 		
 	"The children of the node mapped as child name -> child storeId"
-	shared Map<String, String> children;
+	shared Map<String, {String+}> children;
 	
 	"The properties of the node mapped as property name -> property value."
 	shared Map<String, Property> properties;

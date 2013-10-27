@@ -26,8 +26,10 @@ class NodePrinter(WorkingTreeNode node) {
 			b.append("\n");
 		}
 				
-		for(child in node.children.values) {
-			printTree(child, b, indent +2);
+		for(childList in node.children.values) {
+			for(child in childList) {
+				printTree(child, b, indent +2);
+			}
 		}
 	}
 	
