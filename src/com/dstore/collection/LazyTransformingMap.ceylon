@@ -51,11 +51,6 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue, DefaultValue>(tra
 	
 	shared actual DefaultValue get(Object key) {
 		value element = mixed.get(key);
-		if (exists element) {
-			print("key: ``key`` -- element ``element``..");
-		} else {
-			print("element ``key`` does not exist.");
-		}
 		if(is TargetValue element) {
 			print("is TargetValue");
 			return element;
@@ -65,26 +60,7 @@ shared class LazyTransformingMap<Key, InputValue, TargetValue, DefaultValue>(tra
 			value transformed = transform(element);
 			mixed.put(key, transformed);
 			return transformed;
-		} else if (is {Node+} element) {
-			print("is {Node+}");
-		} else if (is {Node*} element) {
-			print("is {Node*}");
-		} else if (is {String+} element) {
-			print("is {String+}");
-		} else if (is {String*} element) {
-			print("is {String*}");
-			print("``element.first else "no first"``");
-		} else if (is Null element) {
-			print("is null?!?!?!?!");
-			return defaultValue;
-		} else if (is {Object*} element) {
-			print("is {Object*}");
-		} else if (is {Anything*} element) {
-			print("is {Anything*}");
-		} else if (is DefaultValue element) {
-			print("is REALLY DefaultValue");
 		}
-		print("is DefaultValue");
 		//print("type: ``type(element)``");
 		return defaultValue;
 	}
