@@ -33,12 +33,12 @@ shared class WorkingTreeNode(
 	"The stored node from which this node was loaded"
 	shared variable FlatStoredNode? storedNode;
 
-	"If the node is new or has been stored already"
-	shared Boolean new {
+	"If the node is already stored or if it is new"
+	shared Boolean stored {
 		if(exists stored = storedNode) { 
-			return false;
-		} else {
 			return true;
+		} else {
+			return false;
 		}
 	}
 

@@ -4,11 +4,11 @@ import ceylon.collection { MutableMap }
 shared class NodeExistsException(String description) 
 		extends Exception(description) {}
 
-"Intersection type of accepted primitve property types"
-shared alias PropertyPrimitive => <String|Integer|Float>;
-
 "Intersection type of property primitives and iterables of property primitives"
-shared alias Property => <PropertyPrimitive|{PropertyPrimitive*}>;
+shared alias Property => PropertyPrimitive|{PropertyPrimitive*};
+
+"Intersection type of accepted primitve property types"
+shared alias PropertyPrimitive => String|Integer|Float;
 
 "A node in the tree"
 shared interface Node {

@@ -143,7 +143,7 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 		
 		// give the ones to update a new id before storing, otherwise child ids won't match
 		for(WorkingTreeNode node in nodesToUpdate) {
-			if(!node.new) {
+			if(node.stored) {
 				node.storeId = storage.uniqueId();
 			}
 		}
@@ -164,8 +164,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 					})
 				);
 			} else {
-				if(exists stored = node.storedNode) {
-					children = stored.childrenId;
+				if(exists stored = node.storedNode, exists childrenId = stored.childrenId) {
+					children = childrenId;
 				} else {
 					children = emptyMap;
 				}
@@ -177,8 +177,8 @@ shared class WorkingTree(storage, baseCommit, branchName) {
 				properties = HashMap<String, Property>(node.properties);
 			} else {
 				// otherwise just use the old id.
-				if (exists stored = node.storedNode) {
-					properties = stored.propertiesId;
+				if (exists stored = node.storedNode, exists propertiesId = stored.propertiesId) {
+					properties = propertiesId;
 				} else {
 					properties = emptyMap;
 				}

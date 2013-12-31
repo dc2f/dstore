@@ -89,9 +89,25 @@ shared class HashMapStorage() satisfies Storage {
 	shared actual StoredNode readNode(String storeId) {
 		value node = storedNodes.get(storeId);
 		assert(exists node);
-		value children = storedChildren.get(node.childrenId);
-		value properties = storedProperties.get(node.propertiesId);
-		assert(exists children, exists properties);
+		
+		Map<String, String> children;
+		
+		if(exists childrenId = node.childrenId) {
+			value c = storedChildren.get(childrenId);
+			assert(exists c);
+			children = c;
+		} else {
+			children = emptyMap;
+		}
+		
+		Map<String, Property> properties;
+		if(exists propertiesId = node.propertiesId) {
+			value p = storedProperties.get(propertiesId);
+			assert(exists p);
+			properties = p;
+		} else {
+			properties = emptyMap;
+		}
 		
 		return StoredNode(node.storedId, node.name, node.childrenId, node.propertiesId, children, properties);
 	}
@@ -147,17 +163,21 @@ shared class HashMapStorage() satisfies Storage {
 		value b = StringBuilder();
 		for(value id -> node in storedNodes) {
 			b.append("Node ``node.name`` (``node.storedId``)\n");
-			b.append(" + Children (``node.childrenId``)\n");
-			value children = storedChildren[node.childrenId];
-			assert(exists children);
-			for(name -> child in children) {
-				b.append("   - ``name`` (``child``)\n");
+			if(exists childrenId = node.childrenId) {
+				b.append(" + Children (``childrenId``)\n");
+				value children = storedChildren[childrenId];
+				assert(exists children);
+				for(name -> child in children) {
+					b.append("   - ``name`` (``child``)\n");
+				}
 			}
-			b.append(" + Properties (``node.propertiesId``)\n");
-			value properties = storedProperties[node.propertiesId];
-			assert(exists properties);
-			for(name -> property in properties) {
-				b.append("   - ``name`` (``property``)\n");
+			if(exists propertiesId = node.propertiesId) {
+				b.append(" + Properties (``propertiesId``)\n");
+				value properties = storedProperties[propertiesId];
+				assert(exists properties);
+				for(name -> property in properties) {
+					b.append("   - ``name`` (``property``)\n");
+				}
 			}
 		}
 		return b.string;
